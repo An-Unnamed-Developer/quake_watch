@@ -8,8 +8,8 @@ on:
 
 env:
   # 👇 update these values for your project
-  WORKSPACE: "YourProject.xcworkspace"     # or PROJECT: "YourProject.xcodeproj"
-  WATCH_SCHEME: "YourWatchAppScheme"
+  WORKSPACE: "qwatch.xcworkspace"     # or PROJECT: "YourProject.xcodeproj"
+  WATCH_SCHEME: "qwatch"
   CONFIGURATION: "Release"
 
 jobs:
