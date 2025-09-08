@@ -2,9 +2,9 @@ name: Build watchOS IPA
 
 on:
   push:
-    branches: [ main ]
+    branches: [ github-release ]
   pull_request:
-    branches: [ main ]
+    branches: [ github-release ]
 
 env:
   # 👇 update these values for your project
