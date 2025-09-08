@@ -28,3 +28,4 @@ For a TODO list for a Watch port, see "qwatch WatchKit Extension/TODO.txt", but 
 
 Tested on WatchKit simulator for Apple Watch Series 5 and watchOS 8.6, Xcode 13.4.1
 Tested on real device - Apple Watch Series 5, watchOS 8.6, iOS 15.6
+ 
