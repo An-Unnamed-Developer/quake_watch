@@ -1,0 +1,109 @@
+name: Build watchOS IPA
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  # 👇 update these values for your project
+  WORKSPACE: "YourProject.xcworkspace"     # or PROJECT: "YourProject.xcodeproj"
+  WATCH_SCHEME: "YourWatchAppScheme"
+  CONFIGURATION: "Release"
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Download Quake shareware assets
+        run: |
+          if [ -f ./download_shareware_assets.sh ]; then
+            chmod +x ./download_shareware_assets.sh
+            ./download_shareware_assets.sh
+          fi
+
+      # Optional: CocoaPods
+      - name: Install CocoaPods (if Podfile exists)
+        run: |
+          if [ -f "Podfile" ]; then
+            sudo gem install cocoapods --no-document
+            pod install
+          fi
+
+      - name: Build and archive
+        run: |
+          set -euo pipefail
+
+          if [ -n "${WORKSPACE:-}" ] && [ -f "$WORKSPACE" ]; then
+            PROJ_FLAG=(-workspace "$WORKSPACE")
+          elif [ -n "${PROJECT:-}" ] && [ -f "$PROJECT" ]; then
+            PROJ_FLAG=(-project "$PROJECT")
+          else
+            echo "Could not find WORKSPACE or PROJECT. Please set it in env."
+            exit 1
+          fi
+
+          # Create export dir
+          mkdir -p build/export
+
+          # Archive
+          xcodebuild \
+            "${PROJ_FLAG[@]}" \
+            -scheme "$WATCH_SCHEME" \
+            -configuration "$CONFIGURATION" \
+            -sdk iphoneos \
+            -archivePath build/App.xcarchive \
+            CODE_SIGNING_ALLOWED=NO \
+            clean archive
+
+      - name: Export .ipa
+        run: |
+          cat > build/ExportOptions.plist <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>ad-hoc</string>
+            <key>signingStyle</key>
+            <string>manual</string>
+            <key>compileBitcode</key>
+            <false/>
+            <key>stripSwiftSymbols</key>
+            <true/>
+            <key>destination</key>
+            <string>export</string>
+            <key>manageAppVersionAndBuildNumber</key>
+            <false/>
+          </dict>
+          </plist>
+          EOF
+
+          xcodebuild \
+            -exportArchive \
+            -archivePath build/App.xcarchive \
+            -exportOptionsPlist build/ExportOptions.plist \
+            -exportPath build/export \
+            CODE_SIGNING_ALLOWED=NO
+
+          echo "Export complete. Contents:"
+          ls -R build/export
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: watchOS-IPA
+          path: build/export/*.ipa
+          if-no-files-found: error
