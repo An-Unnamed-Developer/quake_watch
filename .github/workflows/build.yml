@@ -9,7 +9,7 @@ on:
 env:
   # 👇 update these values for your project
   WORKSPACE: "qwatch.xcodeproj"     # or PROJECT: "YourProject.xcodeproj"
-  WATCH_SCHEME: "qwatch"
+  WATCH_SCHEME: "qwatch Watchkit App"
   CONFIGURATION: "Release"
 
 jobs:
